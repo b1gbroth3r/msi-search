@@ -25,6 +25,7 @@ DECLSPEC_IMPORT UINT WINAPI MSI$MsiViewExecute(MSIHANDLE, MSIHANDLE);
 DECLSPEC_IMPORT UINT WINAPI MSI$MsiViewFetch(MSIHANDLE, MSIHANDLE*);
 DECLSPEC_IMPORT UINT WINAPI MSI$MsiCloseHandle(MSIHANDLE);
 DECLSPEC_IMPORT UINT WINAPI MSI$MsiRecordGetStringA(MSIHANDLE, unsigned int, LPSTR, unsigned int*);
+DECLSPEC_IMPORT PCHAR __cdecl MSVCRT$strstr(const char *haystack, const char *needle);
 WINBASEAPI HANDLE WINAPI KERNEL32$FindFirstFileA(LPCSTR, LPWIN32_FIND_DATAA);
 WINBASEAPI HANDLE WINAPI KERNEL32$FindNextFileA(LPCSTR, LPWIN32_FIND_DATAA);
 WINBASEAPI WINBOOL WINAPI KERNEL32$FindClose(HANDLE hFindFile);
@@ -40,9 +41,6 @@ void go(int argc, char* argv[]) {
     if (hFind != INVALID_HANDLE_VALUE) {
         do {
             if (!(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            	BeaconPrintf(CALLBACK_OUTPUT, "\n-----------------------------\n");
-                BeaconPrintf(CALLBACK_OUTPUT, "File: C:\\Windows\\Installer\\%s\n", fileData.cFileName);
-
                 char filePath[MAX_PATH];
                 MSVCRT$sprintf(filePath, "%s\\%s", "C:\\Windows\\Installer", fileData.cFileName);
                 MSIHANDLE hDatabase = NULL;
@@ -60,6 +58,10 @@ void go(int argc, char* argv[]) {
                             char manufacturer[256];
                             DWORD manufacturerLen = sizeof(manufacturer);
                             if (MSI$MsiRecordGetStringA(hRecord, 1, manufacturer, &manufacturerLen) == ERROR_SUCCESS) {
+								if (MSVCRT$strstr(manufacturer, "Microsoft") != NULL) {
+									continue;
+								}
+								BeaconPrintf(CALLBACK_OUTPUT, "File: C:\\Windows\\Installer\\%s\n", fileData.cFileName);
                                 BeaconPrintf(CALLBACK_OUTPUT, "Manufacturer: %s\n", manufacturer);
                             }
                             MSI$MsiCloseHandle(hRecord);
@@ -89,6 +91,7 @@ void go(int argc, char* argv[]) {
                             DWORD productVersionLen = sizeof(productVersion);
                             if (MSI$MsiRecordGetStringA(hRecord, 1, productVersion, &productVersionLen) == ERROR_SUCCESS) {
                                 BeaconPrintf(CALLBACK_OUTPUT, "ProductVersion: %s\n", productVersion);
+								BeaconPrintf(CALLBACK_OUTPUT, "-----------------------------\n");
                             }
                             MSI$MsiCloseHandle(hRecord);
                         }
@@ -101,4 +104,3 @@ void go(int argc, char* argv[]) {
         KERNEL32$FindClose(hFind);
     }
 }
-

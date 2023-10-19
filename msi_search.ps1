@@ -14,7 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 #>
 
-$folderPath = "C:\Windows\Installer"
+Param($path);
+
+if ([string]::IsNullOrEmpty($path)) {
+    $folderPath = "C:\Windows\Installer\"
+}
+else {
+    $folderPath = $path
+}
+
+
 $msiFiles = Get-ChildItem -Path $folderPath -Filter "*.msi" -File
 
 foreach ($file in $msiFiles) {
